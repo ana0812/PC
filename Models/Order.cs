@@ -1,12 +1,16 @@
 using System;
+using Microsoft.WindowsAzure.Storage.Table;
 
 namespace Models
 {
-    public class Order
+    public class Order : TableEntity
     {
-        public int orderID { get; set; }
+        public Order(string userID, int orderID){
+            this.PartitionKey = userID;
+            this.RowKey = orderID.ToString();
+        }
 
-        public int userID { get; set; }
+        public Order(){}
 
         public double totalPrice { get; set; }
 

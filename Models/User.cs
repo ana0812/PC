@@ -1,11 +1,16 @@
-
 using System;
+using Microsoft.WindowsAzure.Storage.Table;
 
 namespace Models
 {
-    public class User
+    public class User : TableEntity
     {
-        public int Id { get; set; }
+        public User(string name, int id){
+            this.PartitionKey = name;
+            this.RowKey = id.ToString();
+        }
+
+        public User(){}
 
         public string Email { get; set; }
 

@@ -1,18 +1,22 @@
-
-
 using System;
+using Microsoft.WindowsAzure.Storage.Table;
 
 namespace Models
-{
-    public class Product
+{//eventaul adaugam categorie sa fie pt 
+    public class Product : TableEntity
     {
-        public int Id { get; set; }
+        public Product(string Category, string Name){
+            this.PartitionKey = Category;
+            this.RowKey = Name;
+        }
 
-        public string Name { get; set; }
+        public Product(){}
 
         public int Quantity { get; set; }
 
         public double Price { get; set; }
+
+        public string PictureURL {get; set; }
 
     }
 }
