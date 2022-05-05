@@ -14,31 +14,52 @@ namespace L02.Controllers
     public class OrderedProductsController : ControllerBase
     {
 
-        [HttpGet]
-        public IEnumerable<OrderedProduct> Get()
+        private IOrderedProductRepository _orderedproductRepository;
+
+        public OrderedProductsController(IOrderedProductRepository orderedproductRepository)
         {
-            return OrderedProductsRepo.OrderedProducts;
+            _orderedproductRepository=orderedproductRepository;
         }
-        [HttpGet("{id}")]
-        public OrderedProduct Get(int id)
+
+         [HttpGet]
+        public async Task<IEnumerable<OrderedProduct>> Get()
         {
-            return OrderedProductsRepo.OrderedProducts.FirstOrDefault(s => s.orderID == id);
+            return await _orderedproductRepository.GetAllOrderedProducts();
         }
+
+        [HttpGet("{partitionKey}")]
+        public async Task<OrderedProduct> Get(string partitionKey,string rowKey)
+        {
+            return await _orderedproductRepository.GetOrderedProduct(partitionKey, rowKey);
+        }
+        
         [HttpPost]
-        public void Post([FromBody]OrderedProduct o)
+        public async Task Post([FromBody]OrderedProduct orderedproducts)
         {
-            OrderedProductsRepo.OrderedProducts.Add(o);
+            try{
+                    await _orderedproductRepository.CreateOrderedProduct(orderedproducts);
+                }
+                catch (System.Exception)
+                {
+                    throw;
+                }
         }
         [HttpDelete]
-        public void Delete([FromBody] int id)
+        public async void Delete(string partitionKey,string rowKey)
         {
-            OrderedProductsRepo.OrderedProducts.RemoveAll(s => s.orderID == id);
+                try{
+                await _orderedproductRepository.DeleteOrderedProduct(partitionKey,rowKey);
+                }
+                catch (System.Exception)
+                {
+                    throw;
+                }
         }
         [HttpPut]
-        public void Put([FromBody] OrderedProduct o)
+        public async void Put(OrderedProduct orderedproduct)
         {
-            OrderedProductsRepo.OrderedProducts.RemoveAll(s => s.orderID == o.orderID);
-            OrderedProductsRepo.OrderedProducts.Add(o);
+            await _orderedproductRepository.DeleteOrderedProduct(orderedproduct.PartitionKey,orderedproduct.RowKey);
+            await _orderedproductRepository.CreateOrderedProduct(orderedproduct);
         }
     }
 }

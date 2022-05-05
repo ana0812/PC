@@ -11,34 +11,54 @@ namespace L02.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class StudentsController : ControllerBase
+    public class UsersController : ControllerBase
     {
 
-        [HttpGet]
-        public IEnumerable<User> Get()
+        private IUserRepository _userRepository;
+
+        public UsersController(IUserRepository userRepository)
         {
-            return UsersRepo.Users;
+            _userRepository=userRepository;
         }
-        [HttpGet("{id}")]
-        public User Get(int id)
+
+         [HttpGet]
+        public async Task<IEnumerable<User>> Get()
         {
-            return UsersRepo.Users.FirstOrDefault(s => s.Id == id);
+            return await _userRepository.GetAllUsers();
+        }
+
+        [HttpGet("{partitionKey}")]
+        public async Task<User> Get(string partitionKey,string rowKey)
+        {
+            return await _userRepository.GetUser(partitionKey, rowKey);
         }
         [HttpPost]
-        public void Post([FromBody]User user)
+        public async Task Post([FromBody]User user)
         {
-            UsersRepo.Users.Add(user);
+            try{
+                    await _userRepository.CreateUser(user);
+                }
+                catch (System.Exception)
+                {
+                    throw;
+                }
         }
         [HttpDelete]
-        public void Delete([FromBody] int id)
+        public async void Delete(string partitionKey,string rowKey)
         {
-            UsersRepo.Users.RemoveAll(s => s.Id == id);
+                try{
+                await _userRepository.DeleteUser(partitionKey,rowKey);
+                }
+                catch (System.Exception)
+                {
+                    throw;
+                }
         }
         [HttpPut]
-        public void Put([FromBody] User user)
+        public async void Put(User user)
         {
-            UsersRepo.Users.RemoveAll(s => s.Id == user.Id);
-            UsersRepo.Users.Add(user);
+            await _userRepository.DeleteUser(user.PartitionKey,user.RowKey);
+            await _userRepository.CreateUser(user);
         }
     }
 }

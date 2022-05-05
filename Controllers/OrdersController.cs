@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.WindowsAzure.Storage.Table;
 using Models;
 using Repositories;
 
@@ -14,31 +15,50 @@ namespace L02.Controllers
     public class OrdersController : ControllerBase
     {
 
-        [HttpGet]
-        public IEnumerable<Order> Get()
-        {
-            return OrdersRepo.Orders;
+        private IOrderRepository _orderRepository;
+
+        public OrdersController(IOrderRepository orderRepository){
+            _orderRepository = orderRepository;
         }
-        [HttpGet("{id}")]
-        public Order Get(int id)
+
+        [HttpGet]
+        public async Task<IEnumerable<Order>> Get()
         {
-            return OrdersRepo.Orders.FirstOrDefault(s => s.orderID == id);
+            return await _orderRepository.GetAllOrders();
+        }
+
+        [HttpGet("{partitionKey}")]
+        public async Task<Order> Get(string partitionKey, string rowKey)
+        {
+            return await _orderRepository.GetOrder(partitionKey, rowKey);
         }
         [HttpPost]
-        public void Post([FromBody]Order o)
+        public async void Post([FromBody]Order o)
         {
-            OrdersRepo.Orders.Add(o);
+           try{
+                    await _orderRepository.CreateOrder(o);
+                }
+                catch (System.Exception)
+                {
+                    throw;
+                }
         }
         [HttpDelete]
-        public void Delete([FromBody] int id)
+        public async void Delete(string partitionKey,string rowKey)
         {
-            OrdersRepo.Orders.RemoveAll(s => s.orderID == id);
+            try{
+                await _orderRepository.DeleteOrder(partitionKey,rowKey);
+                }
+                catch (System.Exception)
+                {
+                    throw;
+                }
         }
         [HttpPut]
-        public void Put([FromBody] Order o)
+        public async void Put(Order o)
         {
-            OrdersRepo.Orders.RemoveAll(s => s.orderID == o.orderID);
-            OrdersRepo.Orders.Add(o);
+            await _orderRepository.DeleteOrder(o.PartitionKey,o.RowKey);
+            await _orderRepository.CreateOrder(o);
         }
     }
 }

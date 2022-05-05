@@ -14,31 +14,52 @@ namespace L02.Controllers
     public class ProductsController : ControllerBase
     {
 
-        [HttpGet]
-        public IEnumerable<Product> Get()
+        private IProductRepository _productRepository;
+
+        public ProductsController(IProductRepository productRepository)
         {
-            return ProductsRepo.Products;
+            _productRepository=productRepository;
         }
-        [HttpGet("{id}")]
-        public Product Get(int id)
+
+         [HttpGet]
+        public async Task<IEnumerable<Product>> Get()
         {
-            return ProductsRepo.Products.FirstOrDefault(s => s.Id == id);
+            return await _productRepository.GetAllProducts();
         }
+
+        [HttpGet("{partitionKey}")]
+        public async Task<Product> Get(string partitionKey,string rowKey)
+        {
+            return await _productRepository.GetProduct(partitionKey, rowKey);
+        }
+        
         [HttpPost]
-        public void Post([FromBody]Product p)
+        public async Task Post([FromBody]Product product)
         {
-            ProductsRepo.Products.Add(p);
+            try{
+                    await _productRepository.CreateProduct(product);
+                }
+                catch (System.Exception)
+                {
+                    throw;
+                }
         }
         [HttpDelete]
-        public void Delete([FromBody] int id)
+        public async void Delete(string partitionKey,string rowKey)
         {
-            ProductsRepo.Products.RemoveAll(s => s.Id == id);
+                try{
+                await _productRepository.DeleteProduct(partitionKey,rowKey);
+                }
+                catch (System.Exception)
+                {
+                    throw;
+                }
         }
         [HttpPut]
-        public void Put([FromBody] Product p)
+        public async void Put(Product product)
         {
-            ProductsRepo.Products.RemoveAll(s => s.Id == p.Id);
-            ProductsRepo.Products.Add(p);
+            await _productRepository.DeleteProduct(product.PartitionKey,product.RowKey);
+            await _productRepository.CreateProduct(product);
         }
     }
 }
